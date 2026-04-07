@@ -1,2 +1,1 @@
-# Chuddies
-👀 Chuddies it's a meme discord bot written in Typescript, located in 📍 Tel Aviv, Israel.
+<img src="https://i.imgur.com/7KePDr1.png" />
