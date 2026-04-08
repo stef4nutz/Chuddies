@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Collection, Message } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Message, ActivityType, Events } from 'discord.js';
 import { Command } from './types/Command';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -33,7 +33,7 @@ if (fs.existsSync(commandsPath)) {
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
         const command: Command = require(filePath).default;
-        
+
         if (command && command.name) {
             client.commands.set(command.name, command);
             console.log(`[Command Handler] Loaded command: ${command.name}`);
@@ -46,21 +46,77 @@ if (fs.existsSync(commandsPath)) {
 }
 
 // Event when the client is logged in
-client.once('clientReady', () => {
-    console.log(`[Bot] Logged in as ${client.user?.tag}!`);
+client.once(Events.ClientReady, (readyClient) => {
+    console.log(`[Bot] Logged in as ${readyClient.user.tag}!`);
     console.log(`[Bot] Prefix is set to: "${PREFIX}"`);
+
+    // Function to update the bot's status
+    const updateStatus = () => {
+        const serverCount = client.guilds.cache.size;
+        const memberCount = client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
+
+        client.user?.setActivity({
+            name: `Watching over ${serverCount} ${serverCount === 1 ? 'server' : 'servers'} with a total of ${memberCount} chuddies`,
+            type: ActivityType.Playing
+        });
+    };
+
+    // Initial update and set interval for every 10 minutes
+    updateStatus();
+    setInterval(updateStatus, 10 * 60 * 1000);
 });
+
+import User from './database/models/User';
+import GuildConfig from './database/models/GuildConfig';
 
 // Message event to handle reading and executing commands
 client.on('messageCreate', async (message: Message) => {
-    // Ignore messages from bots or that do not start with the prefix
-    if (message.author.bot || !message.content.startsWith(PREFIX)) return;
+    // Ignore messages from bots
+    if (message.author.bot) return;
+
+    // Handling Leveling (only in guilds)
+    if (message.guild) {
+        const config = await GuildConfig.findOne({ guildId: message.guild.id });
+        if (config?.levelingEnabled) {
+            let userRecord = await User.findOne({ discordId: message.author.id, guildId: message.guild.id });
+
+            if (!userRecord) {
+                userRecord = new User({ discordId: message.author.id, guildId: message.guild.id });
+            }
+
+            userRecord.messageCount += 1;
+
+            if (userRecord.messageCount >= 50) {
+                userRecord.level += 1;
+                userRecord.messageCount = 0;
+                // Notify without ping using username
+                const channel = message.channel;
+                if (channel && 'send' in channel) {
+                    await (channel as any).send(`What a good goy ${message.author.username}, you just reached level ${userRecord.level}.`);
+                }
+            }
+
+            await userRecord.save();
+        }
+    }
+
+    // Command parsing (must start with prefix)
+    if (!message.content.startsWith(PREFIX)) return;
 
     // Parse the command and arguments out of the message
     const args = message.content.slice(PREFIX.length).trim().split(/ +/);
     const commandName = args.shift()?.toLowerCase();
 
     if (!commandName) return;
+
+    // Mandatory Profile Check
+    const publicCommands = ['profile', 'help'];
+    if (!publicCommands.includes(commandName)) {
+        const userRecord = await User.findOne({ discordId: message.author.id, guildId: message.guild.id });
+        if (!userRecord || (!userRecord.age && !userRecord.description)) {
+            return message.reply('⚠️ **You need a profile to use this command!**\nRun `$profile create` to get started.');
+        }
+    }
 
     // Fetch the command from the collection
     const command = client.commands.get(commandName);

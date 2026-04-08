@@ -12,6 +12,11 @@ export interface IUser extends Document {
     racismLevel?: string;
     spouseId?: string;
     gender?: string;
+    balance: number;
+    job: string;
+    lastWork?: Date;
+    messageCount: number;
+    portfolio: Map<string, number>;
 }
 
 const UserSchema: Schema = new Schema({
@@ -25,7 +30,12 @@ const UserSchema: Schema = new Schema({
     truecel: { type: String },
     racismLevel: { type: String },
     spouseId: { type: String, default: null },
-    gender: { type: String, default: 'Moid' }
+    gender: { type: String, default: 'Moid' },
+    balance: { type: Number, default: 0 },
+    job: { type: String, default: 'Unemployed' },
+    lastWork: { type: Date, default: null },
+    messageCount: { type: Number, default: 0 },
+    portfolio: { type: Map, of: Number, default: {} }
 });
 
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

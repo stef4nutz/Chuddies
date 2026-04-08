@@ -38,6 +38,16 @@ const command: Command = {
                     .setValue('looks')
                     .setEmoji('😎'),
                 new StringSelectMenuOptionBuilder()
+                    .setLabel('Economy')
+                    .setDescription('Jobs, work, balance and transfers')
+                    .setValue('economy')
+                    .setEmoji('💰'),
+                new StringSelectMenuOptionBuilder()
+                    .setLabel('Market')
+                    .setDescription('Stocks, crypto and your portfolio')
+                    .setValue('market')
+                    .setEmoji('📈'),
+                new StringSelectMenuOptionBuilder()
                     .setLabel('Utility & Fun')
                     .setDescription('Miscellaneous and fun commands')
                     .setValue('utility')
@@ -94,7 +104,31 @@ const command: Command = {
                     .setDescription('Other tools and gimmicks.')
                     .addFields(
                         { name: '`$ping`', value: 'Check the bot latency.' },
-                        { name: '`$ip @user`', value: 'Run a hacking simulation to find someone\'s IP.' }
+                        { name: '`$ip @user`', value: 'Run a hacking simulation to find someone\'s IP.' },
+                        { name: '`$game [name]`', value: 'Get a game recommendation or search for one.' },
+                        { name: '`$movie [title]`', value: 'Get a movie recommendation or search for one.' }
+                    );
+            } else if (selected === 'economy') {
+                newEmbed
+                    .setTitle('💰 Economy')
+                    .setDescription('Earn, spend and transfer your Chudbucks.')
+                    .addFields(
+                        { name: '`$balance [@user]`', value: 'Check your wallet or another user\'s balance.' },
+                        { name: '`$job list`', value: 'Browse available jobs and their level requirements.' },
+                        { name: '`$job join <name>`', value: 'Apply for a job (some are level-locked).' },
+                        { name: '`$work`', value: 'Earn Chudbucks from your current job. (10s cooldown)' },
+                        { name: '`$transfer @user <amount>`', value: 'Send Chudbucks to another user.' },
+                        { name: '`$level enable/disable`', value: 'Toggle the leveling system for this server. (Requires Manage Server)' }
+                    );
+            } else if (selected === 'market') {
+                newEmbed
+                    .setTitle('📈 Market')
+                    .setDescription('Invest your Chudbucks in stocks and crypto. Prices update every 5 minutes.')
+                    .addFields(
+                        { name: '`$market`', value: 'View all current asset prices and trends.' },
+                        { name: '`$buy <symbol> <qty>`', value: 'Buy an asset (e.g. `$buy BTC 0.5`). Includes 1% fee.' },
+                        { name: '`$sell <symbol> <qty>`', value: 'Sell your holdings (e.g. `$sell ETH 1`). Includes 1% fee.' },
+                        { name: '`$portfolio`', value: 'View your asset holdings and their current total value.' }
                     );
             }
 
