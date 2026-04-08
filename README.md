@@ -8,6 +8,9 @@
     <li>🥸 Profile management (larping)</li>
     <li>💖 Relationship management (marriage, esex & fake ekids)</li>
     <li>😎 Looksmaxxing voting system with XP</li>
+    <li>🤑 Economy management with real-time updated Crypto/Stock prices</li>
+    <li>🎚️ Level ups with custom background</li>
+    <li>⚙️ Movie/gaming recommendation from RAWG.io & TheMovieDB.org</li>
   </ul>
   <p>How to install the bot on your own VPS?</p>
   <ol>
