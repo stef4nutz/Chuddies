@@ -72,7 +72,7 @@ const command: Command = {
 
             // Draw Background
             try {
-                const bgPath = path.join(__dirname, '..', 'assets', 'bg.png');
+                const bgPath = path.join(process.cwd(), 'src', 'assets', 'bg.png');
                 const bg = await loadImage(bgPath);
                 ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
             } catch (e) {
