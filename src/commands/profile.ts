@@ -10,8 +10,24 @@ import {
     ModalBuilder, 
     TextInputBuilder, 
     TextInputStyle,
+    AttachmentBuilder
 } from 'discord.js';
 import User from '../database/models/User';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import path from 'path';
+
+// Helper for rounded rectangles (robust for different Node/Canvas environments)
+function drawRoundRect(ctx: any, x: number, y: number, width: number, height: number, radius: number) {
+    if (width < 2 * radius) radius = width / 2;
+    if (height < 2 * radius) radius = height / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
+}
 
 const INTERACTION_TIMEOUT = 300000; // 5 minutes
 
@@ -47,22 +63,129 @@ async function handleView(message: Message, args: string[]) {
         }
     }
 
-    const embed = new EmbedBuilder()
-        .setTitle(`${target.username}'s Profile`)
-        .setDescription(userData.spouseId ? `💍 **Married to <@${userData.spouseId}>**` : '🕊️ **Single**')
-        .setThumbnail(target.displayAvatarURL())
-        .addFields(
-            { name: 'Age', value: userData.age?.toString() || 'Not set', inline: true },
-            { name: 'Abusive/BPD', value: userData.abusiveBpd || 'Not set', inline: true },
-            { name: 'Truecel', value: userData.truecel || 'Not set', inline: true },
-            { name: 'Racism Level', value: userData.racismLevel || 'Not set', inline: true },
-            { name: 'Gender', value: userData.gender || 'Moid', inline: true },
-            { name: 'Description', value: userData.description || 'No description set.' }
-        )
-        .setColor('#2b2d31')
-        .setFooter({ text: `Level: ${userData.level} | XP: ${userData.xp}` });
+    try {
+        const canvas = createCanvas(600, 600);
+        const ctx = canvas.getContext('2d');
 
-    await (message.channel as any).send({ embeds: [embed] });
+        // Draw Background
+        try {
+            const bgPath = path.join(__dirname, '..', 'assets', 'bgprofile.png');
+            const bg = await loadImage(bgPath);
+            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+        } catch (e) {
+            console.warn('[Profile] Failed to load background image bgprofile.png:', e);
+            // Fallback dark color if missing
+            ctx.fillStyle = '#1e1f22';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Top Left: Level
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.fillText(`lvl ${userData.level || 1}`, 30, 60);
+
+        // Avatar
+        ctx.save();
+        drawRoundRect(ctx, 30, 110, 100, 100, 15);
+        ctx.clip();
+        try {
+            const avatarUrl = target.displayAvatarURL({ extension: 'png', size: 256, forceStatic: true }) || target.defaultAvatarURL;
+            const avatar = await loadImage(avatarUrl);
+            ctx.drawImage(avatar, 30, 110, 100, 100);
+        } catch (e) {
+            console.error('[Profile] Failed to load avatar:', e);
+        }
+        ctx.restore();
+
+        // Username
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 36px sans-serif';
+        // Put text next to the avatar (which ends at x=130), so x=150
+        ctx.fillText(target.username, 150, 175);
+
+        // Function to draw stats
+        const drawStat = (label: string, value: string, dx: number, dy: number, width: number) => {
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#444444'; 
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText(label, dx, dy);
+
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#000000'; 
+            ctx.font = 'bold 18px sans-serif';
+            // Limit the value width so it doesn't overflow
+            ctx.fillText(value, dx + width, dy, width - ctx.measureText(label).width - 15);
+            ctx.textAlign = 'left';
+        };
+
+        const startY = 270;
+        const col1X = 30;
+        const col1Width = 260; // Up to 290
+        const col2X = 310;
+        const col2Width = 260; // Up to 570
+
+        let spouseName = 'None';
+        if (userData.spouseId) {
+            try {
+                const spouseUser = await message.client.users.fetch(userData.spouseId);
+                spouseName = spouseUser.username;
+            } catch (e) {
+                spouseName = 'Unknown';
+            }
+        }
+
+        drawStat('Age', userData.age?.toString() || 'N/A', col1X, startY, col1Width);
+        drawStat('Gender', userData.gender || 'Unknown', col1X, startY + 40, col1Width);
+        drawStat('Racism', userData.racismLevel || 'Unknown', col1X, startY + 80, col1Width);
+        
+        drawStat('Abusive/BPD', userData.abusiveBpd || 'Unknown', col2X, startY, col2Width);
+        drawStat('Truecel', userData.truecel || 'Unknown', col2X, startY + 40, col2Width);
+        drawStat('Spouse', spouseName, col2X, startY + 80, col2Width);
+
+        // About Section
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('About', 30, 420);
+
+        ctx.font = '18px sans-serif';
+        ctx.fillStyle = '#333333'; // Slightly dimmer for desc
+        const description = (userData.description || 'No description set.').replace(/\n/g, ' ');
+
+        const maxWidth = 540;
+        const words = description.split(' ');
+        let line = '';
+        let currentY = 450;
+        const lineHeight = 26;
+
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                if (currentY + lineHeight > 580) {
+                    ctx.fillText(line.trim() + '...', 30, currentY);
+                    line = '';
+                    break; 
+                }
+                ctx.fillText(line, 30, currentY);
+                line = words[n] + ' ';
+                currentY += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        if (line) {
+            ctx.fillText(line, 30, currentY);
+        }
+
+        const buffer = await canvas.encode('png');
+        const attachment = new AttachmentBuilder(buffer, { name: 'profile.png' });
+        
+        await message.reply({ files: [attachment] });
+
+    } catch (error) {
+        console.error('[Profile] Error generating image:', error);
+        await message.reply('There was an error generating the profile card.');
+    }
 }
 
 async function handleCreate(message: Message) {
