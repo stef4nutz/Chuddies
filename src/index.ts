@@ -46,7 +46,7 @@ function loadCommands(dirPath: string) {
         const stat = fs.statSync(itemPath);
         if (stat.isDirectory()) {
             loadCommands(itemPath);
-        } else if (item.endsWith('.ts') || item.endsWith('.js')) {
+        } else if ((item.endsWith('.ts') || item.endsWith('.js')) && !item.endsWith('.map')) {
             const command: Command = require(itemPath).default;
             if (command && command.name) {
                 client.commands.set(command.name, command);
