@@ -1,7 +1,7 @@
-import { Command } from '../types/Command';
+import { Command } from '../../types/Command';
 import { TextChannel, EmbedBuilder } from 'discord.js';
-import Submission from '../database/models/Submission';
-import GuildConfig from '../database/models/GuildConfig';
+import Submission from '../../database/models/Submission';
+import GuildConfig from '../../database/models/GuildConfig';
 
 const command: Command = {
     name: 'participate',

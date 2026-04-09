@@ -1,5 +1,5 @@
-import { Command } from '../types/Command';
-import User from '../database/models/User';
+import { Command } from '../../types/Command';
+import User from '../../database/models/User';
 
 const ADMIN_ID = '413326085065801729';
 

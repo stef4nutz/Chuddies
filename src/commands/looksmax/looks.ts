@@ -1,6 +1,6 @@
-import { Command } from '../types/Command';
+import { Command } from '../../types/Command';
 import { PermissionsBitField } from 'discord.js';
-import GuildConfig from '../database/models/GuildConfig';
+import GuildConfig from '../../database/models/GuildConfig';
 
 const command: Command = {
     name: 'looks',

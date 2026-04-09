@@ -15,6 +15,7 @@ export interface IUser extends Document {
     balance: number;
     job: string;
     lastWork?: Date;
+    lastBible?: Date;
     messageCount: number;
     portfolio: Map<string, number>;
 }
@@ -34,6 +35,7 @@ const UserSchema: Schema = new Schema({
     balance: { type: Number, default: 0 },
     job: { type: String, default: 'Unemployed' },
     lastWork: { type: Date, default: null },
+    lastBible: { type: Date, default: null },
     messageCount: { type: Number, default: 0 },
     portfolio: { type: Map, of: Number, default: {} }
 });

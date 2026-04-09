@@ -1,6 +1,6 @@
-import { Command } from '../types/Command';
-import GuildConfig from '../database/models/GuildConfig';
-import User from '../database/models/User';
+import { Command } from '../../types/Command';
+import GuildConfig from '../../database/models/GuildConfig';
+import User from '../../database/models/User';
 import { PermissionsBitField, AttachmentBuilder } from 'discord.js';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import path from 'path';

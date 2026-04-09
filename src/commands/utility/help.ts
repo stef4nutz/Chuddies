@@ -1,4 +1,4 @@
-import { Command } from '../types/Command';
+import { Command } from '../../types/Command';
 import { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, ComponentType, StringSelectMenuOptionBuilder } from 'discord.js';
 
 const command: Command = {
@@ -87,6 +87,7 @@ const command: Command = {
                         { name: '`$marry @user`', value: 'Propose to another user.' },
                         { name: '`$divorce @user`', value: 'Break off a marriage.' },
                         { name: '`$kids`', value: 'Check on your beautiful children.' },
+                        { name: '`$kid (name)`', value: 'Check your children separately. Feed, rename & check their stats.' },
                         { name: '`$esex @user`', value: 'Initiate a spicy simulation with someone.\n**⚠️ If you are married, you will be shamed for engaging in lustful e-sex!**' }
                     );
             } else if (selected === 'looks') {
@@ -106,7 +107,9 @@ const command: Command = {
                         { name: '`$ping`', value: 'Check the bot latency.' },
                         { name: '`$ip @user`', value: 'Run a hacking simulation to find someone\'s IP.' },
                         { name: '`$game [name]`', value: 'Get a game recommendation or search for one.' },
-                        { name: '`$movie [title]`', value: 'Get a movie recommendation or search for one.' }
+                        { name: '`$movie [title]`', value: 'Get a movie recommendation or search for one.' },
+                        { name: '`$steal [emojis]`', value: 'Steal emojis by typing them, or reply to steal a sticker.' },
+                        { name: '`$bible [verse]`', value: 'Get a random holy verse or lookup a specific one.' }
                     );
             } else if (selected === 'economy') {
                 newEmbed
@@ -118,7 +121,8 @@ const command: Command = {
                         { name: '`$job join <name>`', value: 'Apply for a job (some are level-locked).' },
                         { name: '`$work`', value: 'Earn Chudbucks from your current job. (10s cooldown)' },
                         { name: '`$transfer @user <amount>`', value: 'Send Chudbucks to another user.' },
-                        { name: '`$level enable/disable`', value: 'Toggle the leveling system for this server. (Requires Manage Server)' }
+                        { name: '`$level enable/disable`', value: 'Toggle the leveling system for this server. (Requires Manage Server)' },
+                        { name: '`$shop`', value: 'Buy your kid supplies. Parents don\'t need to buy food, they can starve.' }
                     );
             } else if (selected === 'market') {
                 newEmbed

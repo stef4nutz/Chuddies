@@ -1,4 +1,5 @@
-import { Client, GatewayIntentBits, Collection, Message, ActivityType, Events } from 'discord.js';
+// Bot initialized and command loader updated to recursive scanner
+import { Client, GatewayIntentBits, Collection, Message, ActivityType, Events, Partials } from 'discord.js';
 import { Command } from './types/Command';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -11,7 +12,14 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMembers
+    ],
+    partials: [
+        Partials.Message,
+        Partials.Channel,
+        Partials.Reaction
     ]
 });
 
@@ -25,25 +33,31 @@ client.commands = new Collection<string, Command>();
 
 const PREFIX = process.env.PREFIX || '$';
 
-// Dynamically load all commands from the commands directory
+// Dynamically load all commands from the commands directory and its categories
 const commandsPath = path.join(__dirname, 'commands');
-if (fs.existsSync(commandsPath)) {
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
-
-    for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const command: Command = require(filePath).default;
-
-        if (command && command.name) {
-            client.commands.set(command.name, command);
-            console.log(`[Command Handler] Loaded command: ${command.name}`);
-        } else {
-            console.warn(`[Command Handler] Skipping invalid command file: ${file}`);
+function loadCommands(dirPath: string) {
+    if (!fs.existsSync(dirPath)) {
+        console.warn(`[Command Handler] Directory not found at ${dirPath}`);
+        return;
+    }
+    const items = fs.readdirSync(dirPath);
+    for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        const stat = fs.statSync(itemPath);
+        if (stat.isDirectory()) {
+            loadCommands(itemPath);
+        } else if (item.endsWith('.ts') || item.endsWith('.js')) {
+            const command: Command = require(itemPath).default;
+            if (command && command.name) {
+                client.commands.set(command.name, command);
+                console.log(`[Command Handler] Loaded command: ${command.name}`);
+            } else {
+                console.warn(`[Command Handler] Skipping invalid command file: ${item}`);
+            }
         }
     }
-} else {
-    console.warn(`[Command Handler] Commands directory not found at ${commandsPath}`);
 }
+loadCommands(commandsPath);
 
 // Event when the client is logged in
 client.once(Events.ClientReady, (readyClient) => {
@@ -110,7 +124,7 @@ client.on('messageCreate', async (message: Message) => {
     if (!commandName) return;
 
     // Mandatory Profile Check
-    const publicCommands = ['profile', 'help'];
+    const publicCommands = ['profile', 'help', 'shop', 'kid', 'kids'];
     if (!publicCommands.includes(commandName)) {
         const userRecord = await User.findOne({ discordId: message.author.id, guildId: message.guild.id });
         if (!userRecord || (!userRecord.age && !userRecord.description)) {

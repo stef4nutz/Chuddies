@@ -1,4 +1,4 @@
-import { Command } from '../types/Command';
+import { Command } from '../../types/Command';
 import { EmbedBuilder } from 'discord.js';
 import fetch from 'node-fetch';
 

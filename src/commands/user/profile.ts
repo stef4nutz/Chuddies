@@ -1,4 +1,4 @@
-import { Command } from '../types/Command';
+import { Command } from '../../types/Command';
 import { 
     EmbedBuilder, 
     ActionRowBuilder, 
@@ -12,7 +12,7 @@ import {
     TextInputStyle,
     AttachmentBuilder
 } from 'discord.js';
-import User from '../database/models/User';
+import User from '../../database/models/User';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import path from 'path';
 

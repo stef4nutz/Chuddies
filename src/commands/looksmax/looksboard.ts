@@ -1,6 +1,6 @@
-import { Command } from '../types/Command';
+import { Command } from '../../types/Command';
 import { EmbedBuilder } from 'discord.js';
-import User from '../database/models/User';
+import User from '../../database/models/User';
 
 const command: Command = {
     name: 'looksboard',

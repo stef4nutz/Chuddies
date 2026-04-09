@@ -1,5 +1,5 @@
-import { Command } from '../types/Command';
-import User from '../database/models/User';
+import { Command } from '../../types/Command';
+import User from '../../database/models/User';
 
 const command: Command = {
     name: 'work',

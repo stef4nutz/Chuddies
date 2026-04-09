@@ -1,5 +1,5 @@
-import { Command } from '../types/Command';
-import Asset from '../database/models/Asset';
+import { Command } from '../../types/Command';
+import Asset from '../../database/models/Asset';
 import { EmbedBuilder } from 'discord.js';
 
 const command: Command = {
