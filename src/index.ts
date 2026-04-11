@@ -1,5 +1,4 @@
-// Bot initialized and command loader updated to recursive scanner
-import { Client, GatewayIntentBits, Collection, Message, ActivityType, Events, Partials } from 'discord.js';
+import { REST, Routes, Client, GatewayIntentBits, Collection, Message, ActivityType, Events, Partials, Interaction } from 'discord.js';
 import { Command } from './types/Command';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -78,10 +77,59 @@ client.once(Events.ClientReady, (readyClient) => {
     // Initial update and set interval for every 10 minutes
     updateStatus();
     setInterval(updateStatus, 10 * 60 * 1000);
+
+    // Register Application Commands (Slash / Context Menus)
+    const registerCommands = async () => {
+        try {
+            console.log(`[Bot] Started refreshing application (/) commands.`);
+            
+            const interactionCommands = client.commands.filter(cmd => cmd.data).map(cmd => cmd.data.toJSON());
+            const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
+
+            // Register Global commands
+            await rest.put(
+                Routes.applicationCommands(readyClient.user.id),
+                { body: interactionCommands },
+            );
+            
+            console.log(`[Bot] Successfully reloaded ${interactionCommands.length} application commands globally.`);
+        } catch (error) {
+            console.error(`[Bot] Error registering application commands:`, error);
+        }
+    };
+
+    registerCommands();
 });
 
 import User from './database/models/User';
 import GuildConfig from './database/models/GuildConfig';
+
+// Interaction event to handle Slash and Context Menu commands
+client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+    if (!interaction.isCommand() && !interaction.isContextMenuCommand()) return;
+
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command || !command.executeInteraction) {
+        if (interaction.isRepliable()) {
+            await interaction.reply({ content: 'Command not found or interaction not supported.', ephemeral: true });
+        }
+        return;
+    }
+
+    try {
+        await command.executeInteraction(interaction as any);
+    } catch (error) {
+        console.error(`[Error] Failed to execute interaction ${interaction.commandName}:`, error);
+        if (interaction.isRepliable()) {
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+            } else {
+                await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            }
+        }
+    }
+});
 
 // Message event to handle reading and executing commands
 client.on('messageCreate', async (message: Message) => {
