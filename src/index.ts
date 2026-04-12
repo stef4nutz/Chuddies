@@ -83,16 +83,30 @@ client.once(Events.ClientReady, (readyClient) => {
         try {
             console.log(`[Bot] Started refreshing application (/) commands.`);
             
-            const interactionCommands = client.commands.filter(cmd => cmd.data).map(cmd => cmd.data.toJSON());
             const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
+
+            // Fetch currently registered commands to check for mandatory Entry Point commands
+            const currentCommands = await rest.get(Routes.applicationCommands(readyClient.user.id)) as any[];
+            const entryPointCommands = currentCommands.filter(cmd => cmd.type === 4);
+
+            const localCommands = client.commands.filter(cmd => cmd.data).map(cmd => cmd.data.toJSON());
+            
+            // Merge local commands with any mandatory Entry Point commands
+            // We ensure we don't duplicate by checking names, though entry points are special
+            const finalCommands = [...localCommands];
+            for (const ep of entryPointCommands) {
+                if (!finalCommands.some(c => c.name === ep.name)) {
+                    finalCommands.push(ep);
+                }
+            }
 
             // Register Global commands
             await rest.put(
                 Routes.applicationCommands(readyClient.user.id),
-                { body: interactionCommands },
+                { body: finalCommands },
             );
             
-            console.log(`[Bot] Successfully reloaded ${interactionCommands.length} application commands globally.`);
+            console.log(`[Bot] Successfully reloaded ${finalCommands.length} application commands globally (including ${entryPointCommands.length} entry points).`);
         } catch (error) {
             console.error(`[Bot] Error registering application commands:`, error);
         }
